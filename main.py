@@ -41,3 +41,32 @@ if menu == "View Tenants":
     df = pd.read_sql_query("SELECT * FROM tenants", conn)
     st.dataframe(df)
 
+if menu == "Rent Status":
+    conn = get_connection()
+    tenants = pd.read_sql_query("SELECT * FROM tenants", conn)
+
+    for _, row in tenants.iterrows():
+        st.write(f"{row['name']} - Room {row['room_number']} - ₹{row['rent']}")
+        paid = st.checkbox("Paid", key=row['id'])
+
+        if paid:
+            month = "December-2025"
+            cur = conn.cursor()
+            cur.execute("INSERT INTO payments (tenant_id, month, paid) VALUES (?,?,1)",
+                        (row['id'], month))
+            conn.commit()
+if menu == "Dashboard":
+    conn = get_connection()
+    df = pd.read_sql_query("SELECT * FROM tenants", conn)
+    st.metric("Total Tenants", len(df))
+
+    payments = pd.read_sql_query("SELECT * FROM payments WHERE paid=1", conn)
+    total_collected = payments.merge(df, left_on="tenant_id", right_on="id")["rent"].sum()
+
+    st.metric("Total Rent Collected", f"₹{total_collected}")
+
+if menu == "Export":
+    conn = get_connection()
+    df = pd.read_sql_query("SELECT * FROM tenants", conn)
+    df.to_excel("hostel_export.xlsx", index=False)
+    st.success("Exported to hostel_export.xlsx")
