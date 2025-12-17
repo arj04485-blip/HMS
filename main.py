@@ -7,20 +7,21 @@ st.title("Hostel Management System (Basic Version)")
 st.subheader('lets make the hostel management eaiser')
 
 ROOM_RENT = {
-    "Single": 2500,
-    "2 Sharing": 1800,
-    "2 Sharing Attached": 2200,
-    "Triple": 1800
+    "single": 2500,
+    "2sharing": 1800,
+    "2sharing Attached bathroom": 2200,
+    "3sharing": 1800
 }
 
 menu = st.sidebar.selectbox(
     "Menu",
-    ["Dashboard", "Add Tenant", "View Tenants", "Rent Status", "Export"]
+    ["Dashboard", "Add Tenant", "View Tenants","unpaid rentals", "Rent Status", "Export"]
 )
 if menu == "Add Tenant":
     st.header("Add New Tenant")
 
     name = st.text_input("Name")
+    contact_no = st.number_input("contact number",step=12)
     building = st.selectbox("Building", ["A", "B"])
     floor = st.selectbox("Floor", [1, 2, 3])
     room_type = st.selectbox("Room Type", list(ROOM_RENT.keys()))
@@ -30,11 +31,11 @@ if menu == "Add Tenant":
         rent = ROOM_RENT[room_type]
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("INSERT INTO tenants (name, building, floor, room_type, room_number, rent) VALUES (?,?,?,?,?,?)",
-                    (name, building, floor, room_type, room_number, rent))
+        cur.execute("INSERT INTO tenants (name, contact_no, building, floor, room_type, room_number, rent) VALUES (?,?,?,?,?,?)",
+                    (name, contact_no, building, floor, room_type, room_number, rent))
         conn.commit()
         conn.close()
-        st.success("Tenant added successfully.")
+        st.success(f"Tenant{name} added successfully.")
 
 if menu == "View Tenants":
     conn = get_connection()
