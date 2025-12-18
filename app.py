@@ -248,14 +248,30 @@ def dashboard():
 
 # ---------------- MAIN ----------------
 st.title("Hostel Management System")
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-if st.session_state.user_id is None:
-    tab1, tab2 = st.tabs(["Login", "Signup"])
-    with tab1:
+if not st.session_state.logged_in:
+    auth_choice = st.sidebar.selectbox("Account", ["Login", "Signup"])
+
+    if auth_choice == "Login":
         login()
-    with tab2:
+    else:
         signup()
-else:
-    dashboard()
 
+else:
+    menu = st.sidebar.selectbox(
+        "Menu",
+        ["Dashboard", "Add Tenant", "Record Payment"]
+    )
+
+    if menu == "Dashboard":
+        dashboard()
+
+    elif menu == "Add Tenant":
+        add_tenant(st.session_state.user_id)
+
+    elif menu == "Record Payment":
+        record_payment(st.session_state.user_id)
+    
 
