@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS tenants (
     created_at TEXT
 )
 """)
-c.execute("DROP TABLE IF EXISTS room_config")
 c.execute("CREATE TABLE IF NOT EXISTS room_config (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER, room_type TEXT, building TEXT, capacity INTEGER, rent INTEGER)")
 conn.commit()
 
