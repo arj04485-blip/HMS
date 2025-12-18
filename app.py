@@ -58,7 +58,15 @@ def setup_rooms(owner_id):
             c.execute("INSERT INTO room_config (owner_id,room_type,capacity,rent) VALUES (?,?,?,?)", (owner_id,r,new_cap,new_rent))
             conn.commit()
             st.success(r+" saved")
-            
+
+def vacancy_data(owner_id):
+    c.execute("SELECT room_type,building,capacity FROM room_config WHERE owner_id=?", (owner_id,))
+    rows = c.fetchall()
+    for r in rows:
+        c.execute("SELECT COUNT(*) FROM tenants WHERE owner_id=? AND room_type=? AND status='active'", (owner_id,r[0]))
+        occupied = c.fetchone()[0]
+        st.write(r[0], "| Building:", r[1], "| Occupied:", occupied, "| Vacant:", r[2]-occupied)
+
 
 
 # ---------------- SESSION ----------------
@@ -121,17 +129,6 @@ def list_tenants(owner_id, status):
 def checkout_tenant(tenant_id):
     c.execute("UPDATE tenants SET status='checked_out' WHERE id=?", (tenant_id,))
     conn.commit()
-
-def vacancy_data(owner_id):
-    c.execute("SELECT room_type,capacity FROM room_config WHERE owner_id=?", (owner_id,))
-    rooms = c.fetchall()
-    result = []
-    for r in rooms:
-        c.execute("SELECT COUNT(*) FROM tenants WHERE owner_id=? AND room_type=? AND status='active'", (owner_id,r[0]))
-        occ = c.fetchone()[0]
-        result.append((r[0],occ,r[1]-occ))
-    return result
-    
 
 # ---------------- DASHBOARD ----------------
 def dashboard():
