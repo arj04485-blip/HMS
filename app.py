@@ -251,7 +251,7 @@ st.title("Hostel Management System")
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-if not st.session_state.logged_in:
+elif not st.session_state.logged_in:
     auth_choice = st.sidebar.selectbox("Account", ["Login", "Signup"])
 
     if auth_choice == "Login":
@@ -259,5 +259,19 @@ if not st.session_state.logged_in:
     else:
         signup()
 
+else:
+    menu = st.sidebar.selectbox(
+        "Menu",
+        ["Dashboard", "Add Tenant", "Record Payment"]
+    )
+
+    if menu == "Dashboard":
+        dashboard()
+
+    elif menu == "Add Tenant":
+        add_tenant(st.session_state.user_id)
+
+    elif menu == "Record Payment":
+        record_payment(st.session_state.user_id)
     
 
