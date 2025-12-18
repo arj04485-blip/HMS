@@ -122,17 +122,35 @@ def checkout_tenant(tenant_id):
     c.execute("UPDATE tenants SET status='checked_out' WHERE id=?", (tenant_id,))
     conn.commit()
 
+def vacancy_data(owner_id):
+    c.execute("SELECT room_type,capacity FROM room_config WHERE owner_id=?", (owner_id,))
+    rooms = c.fetchall()
+    result = []
+    for r in rooms:
+        c.execute("SELECT COUNT(*) FROM tenants WHERE owner_id=? AND room_type=? AND status='active'", (owner_id,r[0]))
+        occ = c.fetchone()[0]
+        result.append((r[0],occ,r[1]-occ))
+    return result
+    
+
 # ---------------- DASHBOARD ----------------
 def dashboard():
     st.sidebar.title("Hostel Menu")
 
-    menu = st.sidebar.radio(
-        "Navigate",
-        ["Add Tenant", "Active Tenants", "Checked-out Tenants", "Logout"]
-    )
-
-    if menu == "Add Tenant":
+    menu = st.sidebar.radio("Menu", ["Room Setup","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
+    
+    if menu == "Room Setup":
+    setup_rooms(st.session_state.user_id)
+    
+    elif menu == "Add Tenant":
         add_tenant(st.session_state.user_id)
+
+    elif menu == "Vacancy Dashboard":
+    data = vacancy_data(st.session_state.user_id)
+    if not data:
+        st.info("Please configure rooms first")
+    for d in data:
+        st.write(d[0], "| Occupied:", d[1], "| Vacant:", d[2])
 
     elif menu == "Active Tenants":
         st.subheader("Active Tenants")
