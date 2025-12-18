@@ -125,6 +125,9 @@ def login():
         if u and u[1] == hash_password(password):
             st.session_state.user_id = u[0]
             st.rerun()
+            st.session_state.user_id = user[0]
+            st.experimental_rerun()
+
         else:
             st.error("Invalid login")
 
