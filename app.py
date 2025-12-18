@@ -144,10 +144,10 @@ def dashboard():
 
     elif menu == "Vacancy Dashboard":
         data = vacancy_data(st.session_state.user_id)
-    if not data:
-        st.info("Please configure rooms first")
-    for d in data:
-        st.write(d[0], "| Occupied:", d[1], "| Vacant:", d[2])
+        if not data:
+            st.info("Please configure rooms first")
+        for d in data:
+            st.write(d[0], "| Occupied:", d[1], "| Vacant:", d[2])
 
     elif menu == "Active Tenants":
         st.subheader("Active Tenants")
