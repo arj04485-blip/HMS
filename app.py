@@ -61,12 +61,20 @@ def setup_rooms(owner_id):
             st.success(r+" saved")
 
 def vacancy_data(owner_id):
-    c.execute("SELECT room_type,building,capacity FROM room_config WHERE owner_id=?", (owner_id,))
+    c.execute("SELECT room_type, capacity FROM room_config WHERE owner_id=?", (owner_id,))
     rows = c.fetchall()
+
+    result = []
     for r in rows:
-        c.execute("SELECT COUNT(*) FROM tenants WHERE owner_id=? AND room_type=? AND status='active'", (owner_id,r[0]))
+        c.execute(
+            "SELECT COUNT(*) FROM tenants WHERE owner_id=? AND room_type=? AND status='active'",
+            (owner_id, r[0])
+        )
         occupied = c.fetchone()[0]
-        st.write(r[0], "| Building:", r[1], "| Occupied:", occupied, "| Vacant:", r[2]-occupied)
+        vacant = r[1] - occupied
+        result.append((r[0], occupied, vacant))
+
+    return result
 
 
 
