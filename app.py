@@ -27,8 +27,26 @@ CREATE TABLE IF NOT EXISTS tenants (
     building TEXT,
     status TEXT,
     created_at TEXT
+    join_date TEXT
+    checkout_date TEXT
+    security_deposit INTEGER
+    monthly_rent INTEGER
+
 )
 """)
+c.execute("""
+CREATE TABLE IF NOT EXISTS payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER,
+    owner_id INTEGER,
+    amount INTEGER,
+    paid_for_month TEXT,
+    paid_on TEXT
+)
+""")
+conn.commit()
+
+
 c.execute("CREATE TABLE IF NOT EXISTS room_config (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER, room_type TEXT, building TEXT, capacity INTEGER, rent INTEGER)")
 conn.commit()
 
@@ -76,6 +94,21 @@ def vacancy_data(owner_id):
 
     return result
 
+def tenant_balance(tenant_id):
+    c.execute("SELECT join_date, monthly_rent, security_deposit FROM tenants WHERE id=?", (tenant_id,))
+    row = c.fetchone()
+    if not row:
+        return 0, 0, 0
+
+    join_date, rent, deposit = row
+    join_months = (date.today().year - int(join_date[:4])) * 12 + (date.today().month - int(join_date[5:7])) + 1
+    expected = join_months * rent
+
+    c.execute("SELECT COALESCE(SUM(amount),0) FROM payments WHERE tenant_id=?", (tenant_id,))
+    paid = c.fetchone()[0]
+
+    remaining = expected - paid
+    return expected, paid, remaining
 
 
 # ---------------- SESSION ----------------
@@ -109,6 +142,36 @@ def signup():
 
 
 # ---------------- TENANT FUNCTIONS ----------------
+def record_payment(owner_id):
+    st.subheader("Record Tenant Payment")
+
+    tenants = c.execute(
+        "SELECT id, name FROM tenants WHERE owner_id=? AND status='active'",
+        (owner_id,)
+    ).fetchall()
+
+    if not tenants:
+        st.info("No active tenants")
+        return
+
+    tenant_map = {f"{t[1]} (ID:{t[0]})": t[0] for t in tenants}
+    selected = st.selectbox("Select Tenant", list(tenant_map.keys()))
+
+    amount = st.number_input("Amount Paid", min_value=0)
+    month = st.selectbox(
+        "Paid For Month",
+        ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    )
+
+    if st.button("Save Payment"):
+        c.execute(
+            "INSERT INTO payments (tenant_id, owner_id, amount, paid_for_month, paid_on) VALUES (?,?,?,?,DATE('now'))",
+            (tenant_map[selected], owner_id, amount, month)
+        )
+        conn.commit()
+        st.success("Payment recorded")
+             
+
 def add_tenant(owner_id):
     name = st.text_input("Tenant Name")
     contact = st.text_input("Contact Number")
@@ -143,14 +206,16 @@ def checkout_tenant(tenant_id):
 def dashboard():
     st.sidebar.title("Hostel Menu")
 
-    menu = st.sidebar.radio("Menu", ["Room Setup","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
+    menu = st.sidebar.radio("Menu", ["Dashboard","Room Setup","Record Payment","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
                             
-    if menu == "Room Setup":
+    if menu == "Dashboard":
+        dashboard()
+    elif menu == "Room Setup":
         setup_rooms(st.session_state.user_id)
-    
+    elif menu == "Record Payment":
+        record_payment(st.session_state.user_id)
     elif menu == "Add Tenant":
         add_tenant(st.session_state.user_id)
-
     elif menu == "Vacancy Dashboard":
         data = vacancy_data(st.session_state.user_id)
         if not data:
