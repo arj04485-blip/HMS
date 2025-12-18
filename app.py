@@ -137,13 +137,13 @@ def dashboard():
     menu = st.sidebar.radio("Menu", ["Room Setup","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
                             
     if menu == "Room Setup":
-    setup_rooms(st.session_state.user_id)
+        setup_rooms(st.session_state.user_id)
     
     elif menu == "Add Tenant":
         add_tenant(st.session_state.user_id)
 
     elif menu == "Vacancy Dashboard":
-    data = vacancy_data(st.session_state.user_id)
+        data = vacancy_data(st.session_state.user_id)
     if not data:
         st.info("Please configure rooms first")
     for d in data:
