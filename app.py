@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS tenants (
     created_at TEXT
 )
 """)
+
+c.execute("CREATE TABLE IF NOT EXISTS room_config (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER, room_type TEXT, capacity INTEGER, rent INTEGER)")
 conn.commit()
 
 # ---------------- HELPERS ----------------
@@ -41,6 +43,23 @@ ROOM_RENT = {
     "2 Sharing (Attached Bathroom)": 5500,
     "3 Sharing": 3500
 }
+def setup_rooms(owner_id):
+    st.write("Configure Rooms & Rent")
+    room_types = ["Single","2 Sharing","2 Sharing (Attached Bathroom)","3 Sharing"]
+    for r in room_types:
+        c.execute("SELECT capacity,rent FROM room_config WHERE owner_id=? AND room_type=?", (owner_id,r))
+        row = c.fetchone()
+        cap = row[0] if row else 0
+        rent = row[1] if row else 0
+        new_cap = st.number_input(r+" Capacity", min_value=0, value=cap, key="cap_"+r)
+        new_rent = st.number_input(r+" Rent", min_value=0, value=rent, key="rent_"+r)
+        if st.button("Save "+r, key="save_"+r):
+            c.execute("DELETE FROM room_config WHERE owner_id=? AND room_type=?", (owner_id,r))
+            c.execute("INSERT INTO room_config (owner_id,room_type,capacity,rent) VALUES (?,?,?,?)", (owner_id,r,new_cap,new_rent))
+            conn.commit()
+            st.success(r+" saved")
+            
+
 
 # ---------------- SESSION ----------------
 if "user_id" not in st.session_state:
@@ -74,26 +93,23 @@ def signup():
 
 # ---------------- TENANT FUNCTIONS ----------------
 def add_tenant(owner_id):
-    st.subheader("Add New Tenant")
     name = st.text_input("Tenant Name")
     contact = st.text_input("Contact Number")
-    room_type = st.selectbox("Room Type", list(ROOM_RENT.keys()))
-    rent = ROOM_RENT[room_type]
+    room_type = st.selectbox("Room Type", ["Single","2 Sharing","2 Sharing (Attached Bathroom)","3 Sharing"])
+    c.execute("SELECT rent FROM room_config WHERE owner_id=? AND room_type=?", (owner_id,room_type))
+    r = c.fetchone()
+    rent = r[0] if r else 0
     building = st.text_input("Building No (Optional)")
-
-    st.info(f"Monthly Rent: ₹{rent}")
-
+    st.write("Monthly Rent: ₹", rent)
     if st.button("Add Tenant"):
-        c.execute("""
-        INSERT INTO tenants 
-        (owner_id, name, contact, room_type, rent, building, status, created_at)
-        VALUES (?,?,?,?,?,?,?,?)
-        """, (
-            owner_id, name, contact, room_type,
-            rent, building, "active", datetime.now().isoformat()
-        ))
-        conn.commit()
-        st.success("Tenant added")
+        if rent == 0:
+            st.error("Please configure rooms first")
+        else:
+            c.execute("INSERT INTO tenants (owner_id,name,contact,room_type,rent,building,status,created_at) VALUES (?,?,?,?,?,?,?,?)",
+                      (owner_id,name,contact,room_type,rent,building,"active",datetime.now().isoformat()))
+            conn.commit()
+            st.success("Tenant added")
+
 
 def list_tenants(owner_id, status):
     c.execute("""
