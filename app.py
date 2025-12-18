@@ -95,14 +95,17 @@ def vacancy_data(owner_id):
     return result
 
 def tenant_balance(tenant_id):
-    c.execute("SELECT join_date, monthly_rent, security_deposit FROM tenants WHERE id=?", (tenant_id,))
+    c.execute("SELECT join_date, monthly_rent FROM tenants WHERE id=?", (tenant_id,))
     row = c.fetchone()
     if not row:
         return 0, 0, 0
 
-    join_date, rent, deposit = row
-    join_months = (date.today().year - int(join_date[:4])) * 12 + (date.today().month - int(join_date[5:7])) + 1
-    expected = join_months * rent
+    join_date, rent = row
+    jd = datetime.strptime(join_date, "%Y-%m-%d").date()
+    today = date.today()
+
+    months = (today.year - jd.year) * 12 + (today.month - jd.month) + 1
+    expected = months * rent
 
     c.execute("SELECT COALESCE(SUM(amount),0) FROM payments WHERE tenant_id=?", (tenant_id,))
     paid = c.fetchone()[0]
@@ -209,6 +212,25 @@ def checkout_tenant(tenant_id):
 
 # ---------------- DASHBOARD ----------------
 def dashboard():
+    st.divider()
+    st.subheader("Active Tenant Balances")
+    tenants = c.execute("SELECT id, name, join_date, monthly_rent FROM tenants WHERE owner_id=? AND status='active'",
+    (st.session_state.user_id,)).fetchall()
+    if not tenants:
+        st.info("No active tenants")
+    else:
+        for t in tenants:
+            expected, paid, remaining = tenant_balance(t[0])
+            st.write(
+                f"""
+                **{t[1]}**
+                | Joined: {t[2]}
+                | Rent: ₹{t[3]}
+                | Paid: ₹{paid}
+                | Due: ₹{remaining}
+                """
+            )
+
     st.sidebar.title("Hostel Menu")
 
     menu = st.sidebar.radio("Menu", ["Dashboard","Room Setup","Record Payment","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
@@ -263,4 +285,3 @@ if st.session_state.user_id is None:
         signup()
 else:
     dashboard()
-
