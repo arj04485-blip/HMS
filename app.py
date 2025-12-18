@@ -251,7 +251,7 @@ st.title("Hostel Management System")
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-elif not st.session_state.logged_in:
+if not st.session_state.logged_in:
     auth_choice = st.sidebar.selectbox("Account", ["Login", "Signup"])
 
     if auth_choice == "Login":
