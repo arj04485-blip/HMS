@@ -1,7 +1,7 @@
 import streamlit as st
 import sqlite3
 import hashlib
-from datetime import datetime
+from datetime import datetime, date
 
 # ---------------- DATABASE ----------------
 conn = sqlite3.connect("hostel.db", check_same_thread=False)
@@ -26,14 +26,14 @@ CREATE TABLE IF NOT EXISTS tenants (
     rent INTEGER,
     building TEXT,
     status TEXT,
-    created_at TEXT
-    join_date TEXT
-    checkout_date TEXT
-    security_deposit INTEGER
+    created_at TEXT,
+    join_date TEXT,
+    checkout_date TEXT,
+    security_deposit INTEGER,
     monthly_rent INTEGER
-
 )
 """)
+
 c.execute("""
 CREATE TABLE IF NOT EXISTS payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,17 +117,19 @@ if "user_id" not in st.session_state:
 
 # ---------------- AUTH ----------------
 def login():
+    st.subheader("Login")
+
     email = st.text_input("Email", key="login_email")
     password = st.text_input("Password", type="password", key="login_password")
+
     if st.button("Login", key="login_btn"):
-        c.execute("SELECT id,password FROM users WHERE email=?", (email,))
+        c.execute("SELECT id, password FROM users WHERE email=?", (email,))
         u = c.fetchone()
+
         if u and u[1] == hash_password(password):
             st.session_state.user_id = u[0]
+            st.success("Login successful")
             st.rerun()
-            st.session_state.user_id = user[0]
-            st.experimental_rerun()
-
         else:
             st.error("Invalid login")
 
@@ -212,7 +214,8 @@ def dashboard():
     menu = st.sidebar.radio("Menu", ["Dashboard","Room Setup","Record Payment","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
                             
     if menu == "Dashboard":
-        dashboard()
+        st.subheader("Welcome to Dashboard")
+        st.write("Select an option from sidebar")
     elif menu == "Room Setup":
         setup_rooms(st.session_state.user_id)
     elif menu == "Record Payment":
@@ -251,30 +254,13 @@ def dashboard():
 
 # ---------------- MAIN ----------------
 st.title("Hostel Management System")
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
 
-if not st.session_state.logged_in:
-    auth_choice = st.sidebar.selectbox("Account", ["Login", "Signup"])
-
-    if auth_choice == "Login":
+if st.session_state.user_id is None:
+    tab1, tab2 = st.tabs(["Login", "Signup"])
+    with tab1:
         login()
-    else:
+    with tab2:
         signup()
-
 else:
-    menu = st.sidebar.selectbox(
-        "Menu",
-        ["Dashboard", "Add Tenant", "Record Payment"]
-    )
-
-    if menu == "Dashboard":
-        dashboard()
-
-    elif menu == "Add Tenant":
-        add_tenant(st.session_state.user_id)
-
-    elif menu == "Record Payment":
-        record_payment(st.session_state.user_id)
-    
+    dashboard()
 
