@@ -259,19 +259,5 @@ if not st.session_state.logged_in:
     else:
         signup()
 
-else:
-    menu = st.sidebar.selectbox(
-        "Menu",
-        ["Dashboard", "Add Tenant", "Record Payment"]
-    )
-
-    if menu == "Dashboard":
-        dashboard()
-
-    elif menu == "Add Tenant":
-        add_tenant(st.session_state.user_id)
-
-    elif menu == "Record Payment":
-        record_payment(st.session_state.user_id)
     
 
