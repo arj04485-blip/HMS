@@ -48,35 +48,29 @@ if "user_id" not in st.session_state:
 
 # ---------------- AUTH ----------------
 def login():
-    st.subheader("Login")
-    email = st.text_input("Email")
-    pwd = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        c.execute("SELECT id, password FROM users WHERE email=?", (email,))
-        user = c.fetchone()
-        if user and user[1] == hash_password(pwd):
-            st.session_state.user_id = user[0]
-            st.success("Logged in")
+    email = st.text_input("Email", key="login_email")
+    password = st.text_input("Password", type="password", key="login_password")
+    if st.button("Login", key="login_btn"):
+        c.execute("SELECT id,password FROM users WHERE email=?", (email,))
+        u = c.fetchone()
+        if u and u[1] == hash_password(password):
+            st.session_state.user_id = u[0]
             st.rerun()
         else:
-            st.error("Invalid credentials")
+            st.error("Invalid login")
+
 
 def signup():
-    st.subheader("Create Account")
-    email = st.text_input("Email")
-    pwd = st.text_input("Password", type="password")
-
-    if st.button("Signup"):
+    email = st.text_input("Email", key="signup_email")
+    password = st.text_input("Password", type="password", key="signup_password")
+    if st.button("Signup", key="signup_btn"):
         try:
-            c.execute(
-                "INSERT INTO users (email, password) VALUES (?,?)",
-                (email, hash_password(pwd))
-            )
+            c.execute("INSERT INTO users (email,password) VALUES (?,?)", (email, hash_password(password)))
             conn.commit()
-            st.success("Account created. Please login.")
+            st.success("Account created")
         except:
             st.error("Email already exists")
+
 
 # ---------------- TENANT FUNCTIONS ----------------
 def add_tenant(owner_id):
