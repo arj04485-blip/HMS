@@ -134,7 +134,7 @@ def checkout_tenant(tenant_id):
 def dashboard():
     st.sidebar.title("Hostel Menu")
 
-    menu = st.sidebar.radio("Menu", ["Room Setup","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"]
+    menu = st.sidebar.radio("Menu", ["Room Setup","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
                             
     if menu == "Room Setup":
     setup_rooms(st.session_state.user_id)
