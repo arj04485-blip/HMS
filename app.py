@@ -79,20 +79,24 @@ def setup_rooms(owner_id):
             st.success(r+" saved")
 
 def vacancy_data(owner_id):
-    c.execute("SELECT room_type, capacity FROM room_config WHERE owner_id=?", (owner_id,))
-    rows = c.fetchall()
+    c.execute(
+        "SELECT room_type, capacity FROM room_config WHERE owner_id=?",
+        (owner_id,)
+    )
+    configs = c.fetchall()
 
     result = []
-    for r in rows:
+    for room_type, capacity in configs:
         c.execute(
             "SELECT COUNT(*) FROM tenants WHERE owner_id=? AND room_type=? AND status='active'",
-            (owner_id, r[0])
+            (owner_id, room_type)
         )
         occupied = c.fetchone()[0]
-        vacant = r[1] - occupied
-        result.append((r[0], occupied, vacant))
+        vacant = capacity - occupied
+        result.append((room_type, occupied, vacant))
 
     return result
+
 
 def tenant_balance(tenant_id):
     c.execute("SELECT join_date, monthly_rent FROM tenants WHERE id=?", (tenant_id,))
@@ -243,6 +247,16 @@ def dashboard():
                 | Due: ₹{remaining}
                 """
             )
+    st.subheader("Vacancy Status")
+    data = vacancy_data(st.session_state.user_id)
+    if not data:
+        st.info("No room configuration found")
+    else:
+        for d in data:
+            st.write(
+                f"{d[0]} | Occupied: {d[1]} | Vacant: {d[2]}"
+            )
+        
 
     st.sidebar.title("Hostel Menu")
 
