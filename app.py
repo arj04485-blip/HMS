@@ -3,6 +3,12 @@ import sqlite3
 import hashlib
 from datetime import datetime, date
 
+        
+# ---------------- SESSION ----------------
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+    
+
 # ---------------- DATABASE ----------------
 conn = sqlite3.connect("hostel.db", check_same_thread=False)
 c = conn.cursor()
@@ -228,10 +234,7 @@ def load_demo_data(owner_id):
         """, (owner_id, t[0], t[1], t[2], t[3], t[4]))
 
     conn.commit()
-        
-# ---------------- SESSION ----------------
-if "user_id" not in st.session_state:
-    st.session_state.user_id = None
+
 
 # ---------------- AUTH ----------------
 def login():
