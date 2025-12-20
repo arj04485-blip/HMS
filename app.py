@@ -349,9 +349,17 @@ def dashboard():
             )
     
     st.subheader("Room & Bed Vacancy")
-    c.execute("""SELECT r.room_label, r.room_type, r.total_beds, COUNT(t.id) AS occupied, (r.total_beds - COUNT(t.id)) AS vacant
-    FROM rooms r LEFT JOIN tenants t ON r.id = t.room_id AND t.status='active' 
-    WHERE r.owner_id=? GROUP BY r.id""",(st.session_state.user_id,))
+    c.execute("""SELECT r.room_label,
+       r.room_type,
+       r.total_beds,
+       COUNT(t.id) AS occupied,
+       (r.total_beds - COUNT(t.id)) AS vacant
+       FROM rooms r
+       LEFT JOIN tenants t
+       ON r.id = t.room_id
+       AND t.checked_out_date IS NULL
+       WHERE r.owner_id=?
+       GROUP BY r.id""", (st.session_state.user_id,))
     rooms = c.fetchall()
     if not rooms:
         st.info("No rooms created yet")
@@ -360,8 +368,7 @@ def dashboard():
             st.write(
                 f"{r[0]} ({r[1]}) | Beds: {r[2]} | Occupied: {r[3]} | Vacant: {r[4]}"
             )
-        
-    
+
     
     if st.button("Load Demo Data (Temporary)"):
         load_demo_data(st.session_state.user_id)
