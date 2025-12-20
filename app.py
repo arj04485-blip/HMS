@@ -113,6 +113,18 @@ def tenant_balance(tenant_id):
     remaining = expected - paid
     return expected, paid, remaining
 
+def checkout_summary(tenant_id):
+    c.execute(
+        "SELECT security_deposit FROM tenants WHERE id=?",
+        (tenant_id,)
+    )
+    deposit = c.fetchone()[0] or 0
+
+    expected, paid, remaining = tenant_balance(tenant_id)
+
+    refund = deposit - remaining
+    return expected, paid, remaining, deposit, refund
+    
 
 # ---------------- SESSION ----------------
 if "user_id" not in st.session_state:
@@ -254,15 +266,27 @@ def dashboard():
 
     elif menu == "Active Tenants":
         st.subheader("Active Tenants")
-        tenants = list_tenants(st.session_state.user_id, "active")
+        tenants = c.execute(
+            "SELECT id, name FROM tenants WHERE owner_id=? AND status='active'",
+            (st.session_state.user_id,)
+        ).fetchall()
         for t in tenants:
             with st.expander(t[1]):
-                st.write(f"Contact: {t[2]}")
-                st.write(f"Room: {t[3]}")
-                st.write(f"Rent: ₹{t[4]}")
-                st.write(f"Building: {t[5]}")
-                if st.button("Checkout", key=t[0]):
-                    checkout_tenant(t[0])
+                expected, paid, remaining, deposit, refund = checkout_summary(t[0])
+                st.write(f"Total Rent Till Date: ₹{expected}")
+                st.write(f"Total Paid: ₹{paid}")
+                st.write(f"Outstanding Due: ₹{remaining}")
+                st.write(f"Security Deposit: ₹{deposit}")
+                if refund >= 0:
+                    st.success(f"Refund to Tenant: ₹{refund}")
+                else:
+                    st.error(f"Amount to Collect: ₹{-refund}")
+                if st.button("Checkout Tenant", key=f"checkout_{t[0]}"):
+                    c.execute("UPDATE tenants SET status='checked_out', checkout_date=DATE('now') WHERE id=?",
+                              (t[0],)
+                             )
+                    conn.commit()
+                    st.success("Tenant checked out successfully")
                     st.rerun()
 
     elif menu == "Checked-out Tenants":
