@@ -90,18 +90,6 @@ def setup_rooms(owner_id):
             conn.commit()
             st.success(r+" saved")
 
-def vacancy_data(owner_id):
-    st.subheader("Room & Bed Vacancy")
-    c.execute("""SELECT r.room_label, r.room_type, r.total_beds,COUNT(t.id) AS occupied,
-       (r.total_beds - COUNT(t.id)) AS vacant
-       FROM rooms r LEFT JOIN tenants t ON r.id = t.room_id AND t.status='active'
-       WHERE r.owner_id=? GROUP BY r.id""", (st.session_state.user_id,))
-    rows = c.fetchall()
-    for r in rows:
-        st.write(
-            f"{r[0]} ({r[1]}) | Beds: {r[2]} | Occupied: {r[3]} | Vacant: {r[4]}"
-        )
-
 def tenant_balance(tenant_id):
     c.execute("SELECT join_date, monthly_rent FROM tenants WHERE id=?", (tenant_id,))
     row = c.fetchone()
@@ -359,15 +347,22 @@ def dashboard():
                 | Due: ₹{remaining}
                 """
             )
-    st.subheader("Vacancy Status")
-    data = vacancy_data(st.session_state.user_id)
-    if not data:
-        st.info("No room configuration found")
+    
+    st.subheader("Room & Bed Vacancy")
+    c.execute("""SELECT r.room_label, r.room_type, r.total_beds, COUNT(t.id) AS occupied, (r.total_beds - COUNT(t.id)) AS vacant
+    FROM rooms r LEFT JOIN tenants t ON r.id = t.room_id AND t.status='active' 
+    WHERE r.owner_id=? GROUP BY r.id""", 
+              (st.session_state.user_id,))
+    rooms = c.fetchall()
+    if not rooms:
+        st.info("No rooms created yet")
     else:
-        for d in data:
+        for r in rooms:
             st.write(
-                f"{d[0]} | Occupied: {d[1]} | Vacant: {d[2]}"
+                f"{r[0]} ({r[1]}) | Beds: {r[2]} | Occupied: {r[3]} | Vacant: {r[4]}"
             )
+        
+    
     
     if st.button("Load Demo Data (Temporary)"):
         load_demo_data(st.session_state.user_id)
@@ -389,12 +384,6 @@ def dashboard():
         record_payment(st.session_state.user_id)
     elif menu == "Add Tenant":
         add_tenant(st.session_state.user_id)
-    elif menu == "Vacancy Dashboard":
-        data = vacancy_data(st.session_state.user_id)
-        if not data:
-            st.info("Please configure rooms first")
-        for d in data:
-            st.write(d[0], "| Occupied:", d[1], "| Vacant:", d[2])
 
     elif menu == "Active Tenants":
         st.subheader("Active Tenants")
