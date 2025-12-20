@@ -183,7 +183,40 @@ def assign_room(owner_id, room_type):
 
     conn.commit()
     return c.lastrowid
-    
+
+def manage_rooms(owner_id):
+    st.subheader("Room Management")
+
+    c.execute(
+        "SELECT id, room_label, room_type, total_beds FROM rooms WHERE owner_id=?",
+        (owner_id,)
+    )
+    rooms = c.fetchall()
+
+    if not rooms:
+        st.info("No rooms available")
+        return
+
+    for r in rooms:
+        with st.expander(f"{r[1]} ({r[2]})"):
+            new_label = st.text_input(
+                "Room Name",
+                value=r[1],
+                key=f"room_label_{r[0]}"
+            )
+
+            st.write(f"Total Beds: {r[3]}")
+
+            if st.button("Update Name", key=f"update_room_{r[0]}"):
+                c.execute(
+                    "UPDATE rooms SET room_label=? WHERE id=? AND owner_id=?",
+                    (new_label, r[0], owner_id)
+                )
+                conn.commit()
+                st.success("Room name updated")
+                st.rerun()
+                
+
     
 def load_demo_data(owner_id):
     tenants = [
@@ -343,13 +376,15 @@ def dashboard():
 
     st.sidebar.title("Hostel Menu")
 
-    menu = st.sidebar.radio("Menu", ["Dashboard","Room Setup","Record Payment","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
+    menu = st.sidebar.radio("Menu", ["Dashboard","Room config","Room","Record Payment","Add Tenant","Active Tenants","Vacancy Dashboard","Checked-out Tenants","Logout"])
                             
     if menu == "Dashboard":
         st.subheader("Welcome to Dashboard")
         st.write("Select an option from sidebar")
-    elif menu == "Room Setup":
+    elif menu == "Room config":
         setup_rooms(st.session_state.user_id)
+    elif menu == "Rooms":
+        manage_rooms(st.session_state.user_id)
     elif menu == "Record Payment":
         record_payment(st.session_state.user_id)
     elif menu == "Add Tenant":
