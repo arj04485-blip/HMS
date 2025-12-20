@@ -295,8 +295,9 @@ def add_tenant(owner_id):
         if rent == 0:
             st.error("Please configure rooms first")
         else:
-            c.execute("INSERT INTO tenants (owner_id,name,contact,room_type,rent,building,status,created_at) VALUES (?,?,?,?,?,?,?,?)",
-                      (owner_id,name,contact,room_type,rent,building,"active",datetime.now().isoformat()))
+            room_id = assign_room(owner_id, room_type)
+            c.execute("""INSERT INTO tenants(owner_id, name, contact, room_type, room_id,monthly_rent, security_deposit, join_date, status)VALUES (?, ?, ?, ?, ?, ?, ?, DATE('now'), 'active')""", 
+                      (owner_id, name, contact, room_type, room_id,rent, deposit))
             conn.commit()
             st.success("Tenant added")
 
