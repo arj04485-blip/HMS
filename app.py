@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS tenants (
     name TEXT,
     contact TEXT,
     room_type TEXT,
+    room_id INTEGER,
     rent INTEGER,
     building TEXT,
     status TEXT,
@@ -33,6 +34,17 @@ CREATE TABLE IF NOT EXISTS tenants (
     monthly_rent INTEGER
 )
 """)
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS rooms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id INTEGER,
+    room_type TEXT,
+    room_label TEXT,
+    total_beds INTEGER
+)
+""")
+conn.commit()
 
 c.execute("""
 CREATE TABLE IF NOT EXISTS payments (
@@ -138,6 +150,48 @@ def checkout_summary(tenant_id):
 
     refund = deposit - remaining
     return expected, paid, remaining, deposit, refund
+
+def assign_room(owner_id, room_type):
+    beds_map = {
+        "Single": 1,
+        "2 Sharing": 2,
+        "3 Sharing": 3
+    }
+    beds = beds_map[room_type]
+
+    # Try to find an existing room with empty bed
+    c.execute("""
+    SELECT r.id, r.total_beds, COUNT(t.id) AS occupied
+    FROM rooms r
+    LEFT JOIN tenants t
+        ON r.id = t.room_id AND t.status='active'
+    WHERE r.owner_id=? AND r.room_type=?
+    GROUP BY r.id
+    HAVING occupied < r.total_beds
+    LIMIT 1
+    """, (owner_id, room_type))
+
+    room = c.fetchone()
+    if room:
+        return room[0]
+
+    # Otherwise create new room
+    c.execute(
+        "SELECT COUNT(*) FROM rooms WHERE owner_id=? AND room_type=?",
+        (owner_id, room_type)
+    )
+    count = c.fetchone()[0] + 1
+
+    label = f"{room_type.replace(' ', '')}-{count}"
+
+    c.execute("""
+    INSERT INTO rooms (owner_id, room_type, room_label, total_beds)
+    VALUES (?, ?, ?, ?)
+    """, (owner_id, room_type, label, beds))
+
+    conn.commit()
+    return c.lastrowid
+    
     
 def load_demo_data(owner_id):
     tenants = [
