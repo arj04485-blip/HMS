@@ -129,7 +129,29 @@ def checkout_summary(tenant_id):
     refund = deposit - remaining
     return expected, paid, remaining, deposit, refund
     
+def load_demo_data(owner_id):
+    tenants = [
+        ("Aman", "999000001", "Single", 5000, 3000),
+        ("Rohit", "999000002", "2 Sharing", 4000, 3000),
+        ("Suresh", "999000003", "2 Sharing", 4000, 3000),
+        ("Vikas", "999000004", "3 Sharing", 3000, 2000),
+        ("Ankit", "999000005", "Single", 5000, 3000),
+        ("Rahul", "999000006", "3 Sharing", 3000, 2000),
+        ("Deepak", "999000007", "2 Sharing", 4000, 3000),
+        ("Nitin", "999000008", "Single", 5000, 3000),
+        ("Manoj", "999000009", "3 Sharing", 3000, 2000),
+        ("Kunal", "999000010", "2 Sharing", 4000, 3000),
+    ]
 
+    for t in tenants:
+        c.execute("""
+        INSERT INTO tenants
+        (owner_id, name, contact, room_type, monthly_rent, security_deposit, join_date, status)
+        VALUES (?, ?, ?, ?, ?, ?, DATE('now','-2 months'), 'active')
+        """, (owner_id, t[0], t[1], t[2], t[3], t[4]))
+
+    conn.commit()
+        
 # ---------------- SESSION ----------------
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
@@ -256,7 +278,11 @@ def dashboard():
             st.write(
                 f"{d[0]} | Occupied: {d[1]} | Vacant: {d[2]}"
             )
-        
+    
+    if st.button("Load Demo Data (Temporary)"):
+    load_demo_data(st.session_state.user_id)
+    st.success("Demo data loaded")
+    st.rerun()
 
     st.sidebar.title("Hostel Menu")
 
