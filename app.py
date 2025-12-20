@@ -212,6 +212,7 @@ def checkout_tenant(tenant_id):
 
 # ---------------- DASHBOARD ----------------
 def dashboard():
+    st.title("Hostel Management System")
     st.divider()
     st.subheader("Active Tenant Balances")
     tenants = c.execute("SELECT id, name, join_date, monthly_rent FROM tenants WHERE owner_id=? AND status='active'",
@@ -275,7 +276,6 @@ def dashboard():
         st.rerun()
 
 # ---------------- MAIN ----------------
-st.title("Hostel Management System")
 
 if st.session_state.user_id is None:
     tab1, tab2 = st.tabs(["Login", "Signup"])
