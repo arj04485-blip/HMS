@@ -101,14 +101,23 @@ def vacancy_data(owner_id):
 def tenant_balance(tenant_id):
     c.execute("SELECT join_date, monthly_rent FROM tenants WHERE id=?", (tenant_id,))
     row = c.fetchone()
-    if not row:
+    if not row or not row[0]:
         return 0, 0, 0
 
     join_date, rent = row
-    jd = datetime.strptime(join_date, "%Y-%m-%d").date()
+
+    # ✅ Robust date parsing
+    try:
+        jd = datetime.strptime(join_date, "%Y-%m-%d").date()
+    except ValueError:
+        jd = datetime.strptime(join_date[:10], "%Y-%m-%d").date()
+
     today = date.today()
 
     months = (today.year - jd.year) * 12 + (today.month - jd.month) + 1
+    if months < 1:
+        months = 1
+
     expected = months * rent
 
     c.execute("SELECT COALESCE(SUM(amount),0) FROM payments WHERE tenant_id=?", (tenant_id,))
@@ -116,6 +125,7 @@ def tenant_balance(tenant_id):
 
     remaining = expected - paid
     return expected, paid, remaining
+
 
 def checkout_summary(tenant_id):
     c.execute(
