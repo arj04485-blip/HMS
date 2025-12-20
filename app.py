@@ -280,9 +280,9 @@ def dashboard():
             )
     
     if st.button("Load Demo Data (Temporary)"):
-    load_demo_data(st.session_state.user_id)
-    st.success("Demo data loaded")
-    st.rerun()
+        load_demo_data(st.session_state.user_id)
+        st.success("Demo data loaded")
+        st.rerun()
 
     st.sidebar.title("Hostel Menu")
 
