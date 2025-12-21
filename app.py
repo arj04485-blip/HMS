@@ -381,23 +381,6 @@ def dashboard():
         st.rerun()
             
     st.divider()
-    st.subheader("Active Tenant Balances")
-    tenants = c.execute("SELECT id, name, join_date, monthly_rent FROM tenants WHERE owner_id=? AND status='active'",
-    (st.session_state.user_id,)).fetchall()
-    if not tenants:
-        st.info("No active tenants")
-    else:
-        for t in tenants:
-            expected, paid, remaining = tenant_balance(t[0])
-            st.write(
-                f"""
-                **{t[1]}**
-                | Joined: {t[2]}
-                | Rent: ₹{t[3]}
-                | Paid: ₹{paid}
-                | Due: ₹{remaining}
-                """
-            )
     
     st.subheader("Room & Bed Vacancy")
     c.execute("""SELECT r.room_label,
@@ -420,7 +403,26 @@ def dashboard():
                 f"{r[0]} ({r[1]}) | Beds: {r[2]} | Occupied: {r[3]} | Vacant: {r[4]}"
             )
 
-    
+
+
+    st.subheader("Active Tenant Balances")
+    tenants = c.execute("SELECT id, name, join_date, monthly_rent FROM tenants WHERE owner_id=? AND status='active'",
+    (st.session_state.user_id,)).fetchall()
+    if not tenants:
+        st.info("No active tenants")
+    else:
+        for t in tenants:
+            expected, paid, remaining = tenant_balance(t[0])
+            st.write(
+                f"""
+                **{t[1]}**
+                | Joined: {t[2]}
+                | Rent: ₹{t[3]}
+                | Paid: ₹{paid}
+                | Due: ₹{remaining}
+                """
+            )
+
     if st.button("Load Demo Data (Temporary)"):
         load_demo_data(st.session_state.user_id)
         st.success("Demo data loaded")
