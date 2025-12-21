@@ -278,7 +278,7 @@ def record_payment(owner_id):
     tenant_map = {f"{t[1]} (ID:{t[0]})": t[0] for t in tenants}
     selected = st.selectbox("Select Tenant", list(tenant_map.keys()))
 
-    amount = st.number_input("Amount Paid", min_value=0,step=500)
+    amount = st.number_input("Amount Paid", min_value=0)
     month = st.selectbox(
         "Paid For Month",
         ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
