@@ -90,6 +90,7 @@ def setup_rooms(owner_id):
             c.execute("INSERT INTO room_config (owner_id,room_type,capacity,rent) VALUES (?,?,?,?)", (owner_id,r,new_cap,new_rent))
             conn.commit()
             st.success(r+" saved")
+            st.rerun()
 
 def tenant_balance(tenant_id):
     c.execute("SELECT join_date, monthly_rent FROM tenants WHERE id=?", (tenant_id,))
@@ -312,6 +313,7 @@ def add_tenant(owner_id):
                       (owner_id, name, contact, room_type, room_id,rent, deposit))
             conn.commit()
             st.success("Tenant added")
+            st.rerun()
 
 
 def list_tenants(owner_id, status):
@@ -324,6 +326,7 @@ def list_tenants(owner_id, status):
 def checkout_tenant(tenant_id):
     c.execute("UPDATE tenants SET status='checked_out' WHERE id=?", (tenant_id,))
     conn.commit()
+    st.rerun()
 
 # ---------------- DASHBOARD ----------------
 def dashboard():
