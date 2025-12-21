@@ -360,7 +360,7 @@ def dashboard():
        FROM rooms r
        LEFT JOIN tenants t
        ON r.id = t.room_id
-       AND t.checked_out_date IS NULL
+       AND t.checkout_date IS NULL
        WHERE r.owner_id=?
        GROUP BY r.id""", (st.session_state.user_id,))
     rooms = c.fetchall()
