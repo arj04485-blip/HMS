@@ -278,7 +278,7 @@ def record_payment(owner_id):
     tenant_map = {f"{t[1]} (ID:{t[0]})": t[0] for t in tenants}
     selected = st.selectbox("Select Tenant", list(tenant_map.keys()))
 
-    amount = st.number_input("Amount Paid", min_value=0)
+    amount = st.number_input("Amount Paid", min_value=0,step_value=500)
     month = st.selectbox(
         "Paid For Month",
         ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -297,7 +297,7 @@ def add_tenant(owner_id):
     name = st.text_input("Tenant Name")
     contact = st.text_input("Contact Number")
     room_type = st.selectbox("Room Type", ["Single","2 Sharing","2 Sharing (Attached Bathroom)","3 Sharing"])
-    security_deposit=st.number_input("deposited money")
+    deposit = st.number_input("Security Deposit",min_value=0,step=500)
     c.execute("SELECT rent FROM room_config WHERE owner_id=? AND room_type=?", (owner_id,room_type))
     r = c.fetchone()
     rent = r[0] if r else 0
