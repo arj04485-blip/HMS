@@ -379,8 +379,8 @@ def dashboard():
     elif menu == "Logout":
         st.session_state.user_id = None
         st.rerun()
-
-     st.divider()
+            
+    st.divider()
     st.subheader("Active Tenant Balances")
     tenants = c.execute("SELECT id, name, join_date, monthly_rent FROM tenants WHERE owner_id=? AND status='active'",
     (st.session_state.user_id,)).fetchall()
