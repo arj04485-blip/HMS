@@ -297,7 +297,7 @@ def add_tenant(owner_id):
     name = st.text_input("Tenant Name")
     contact = st.text_input("Contact Number")
     room_type = st.selectbox("Room Type", ["Single","2 Sharing","2 Sharing (Attached Bathroom)","3 Sharing"])
-    security_deposit=st.integer_input("deposited money")
+    security_deposit=st.number_input("deposited money")
     c.execute("SELECT rent FROM room_config WHERE owner_id=? AND room_type=?", (owner_id,room_type))
     r = c.fetchone()
     rent = r[0] if r else 0
@@ -328,51 +328,6 @@ def checkout_tenant(tenant_id):
 # ---------------- DASHBOARD ----------------
 def dashboard():
     st.title("Hostel Management System")
-    st.divider()
-    st.subheader("Active Tenant Balances")
-    tenants = c.execute("SELECT id, name, join_date, monthly_rent FROM tenants WHERE owner_id=? AND status='active'",
-    (st.session_state.user_id,)).fetchall()
-    if not tenants:
-        st.info("No active tenants")
-    else:
-        for t in tenants:
-            expected, paid, remaining = tenant_balance(t[0])
-            st.write(
-                f"""
-                **{t[1]}**
-                | Joined: {t[2]}
-                | Rent: ₹{t[3]}
-                | Paid: ₹{paid}
-                | Due: ₹{remaining}
-                """
-            )
-    
-    st.subheader("Room & Bed Vacancy")
-    c.execute("""SELECT r.room_label,
-       r.room_type,
-       r.total_beds,
-       COUNT(t.id) AS occupied,
-       (r.total_beds - COUNT(t.id)) AS vacant
-       FROM rooms r
-       LEFT JOIN tenants t
-       ON r.id = t.room_id
-       AND t.checkout_date IS NULL
-       WHERE r.owner_id=?
-       GROUP BY r.id""", (st.session_state.user_id,))
-    rooms = c.fetchall()
-    if not rooms:
-        st.info("No rooms created yet")
-    else:
-        for r in rooms:
-            st.write(
-                f"{r[0]} ({r[1]}) | Beds: {r[2]} | Occupied: {r[3]} | Vacant: {r[4]}"
-            )
-
-    
-    if st.button("Load Demo Data (Temporary)"):
-        load_demo_data(st.session_state.user_id)
-        st.success("Demo data loaded")
-        st.rerun()
 
     st.sidebar.title("Hostel Menu")
 
@@ -423,6 +378,52 @@ def dashboard():
 
     elif menu == "Logout":
         st.session_state.user_id = None
+        st.rerun()
+
+     st.divider()
+    st.subheader("Active Tenant Balances")
+    tenants = c.execute("SELECT id, name, join_date, monthly_rent FROM tenants WHERE owner_id=? AND status='active'",
+    (st.session_state.user_id,)).fetchall()
+    if not tenants:
+        st.info("No active tenants")
+    else:
+        for t in tenants:
+            expected, paid, remaining = tenant_balance(t[0])
+            st.write(
+                f"""
+                **{t[1]}**
+                | Joined: {t[2]}
+                | Rent: ₹{t[3]}
+                | Paid: ₹{paid}
+                | Due: ₹{remaining}
+                """
+            )
+    
+    st.subheader("Room & Bed Vacancy")
+    c.execute("""SELECT r.room_label,
+       r.room_type,
+       r.total_beds,
+       COUNT(t.id) AS occupied,
+       (r.total_beds - COUNT(t.id)) AS vacant
+       FROM rooms r
+       LEFT JOIN tenants t
+       ON r.id = t.room_id
+       AND t.checkout_date IS NULL
+       WHERE r.owner_id=?
+       GROUP BY r.id""", (st.session_state.user_id,))
+    rooms = c.fetchall()
+    if not rooms:
+        st.info("No rooms created yet")
+    else:
+        for r in rooms:
+            st.write(
+                f"{r[0]} ({r[1]}) | Beds: {r[2]} | Occupied: {r[3]} | Vacant: {r[4]}"
+            )
+
+    
+    if st.button("Load Demo Data (Temporary)"):
+        load_demo_data(st.session_state.user_id)
+        st.success("Demo data loaded")
         st.rerun()
 
 # ---------------- MAIN ----------------
