@@ -74,12 +74,7 @@ conn.commit()
 def hash_password(pwd):
     return hashlib.sha256(pwd.encode()).hexdigest()
 
-ROOM_RENT = {
-    "Single": 6000,
-    "2 Sharing": 4500,
-    "2 Sharing (Attached Bathroom)": 5500,
-    "3 Sharing": 3500
-}
+
 def setup_rooms(owner_id):
     st.write("Configure Rooms & Rent")
     room_types = ["Single","2 Sharing","2 Sharing (Attached Bathroom)","3 Sharing"]
@@ -302,6 +297,7 @@ def add_tenant(owner_id):
     name = st.text_input("Tenant Name")
     contact = st.text_input("Contact Number")
     room_type = st.selectbox("Room Type", ["Single","2 Sharing","2 Sharing (Attached Bathroom)","3 Sharing"])
+    security_deposit=st.integer_input("deposited money")
     c.execute("SELECT rent FROM room_config WHERE owner_id=? AND room_type=?", (owner_id,room_type))
     r = c.fetchone()
     rent = r[0] if r else 0
